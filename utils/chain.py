@@ -23,6 +23,7 @@ import pickle
 import os
 
 import multiprocessing as mp
+from utils.llm import ChatGPT
 
 from operations import *
 
@@ -160,7 +161,7 @@ def get_table_log(sample, skip_op=[], first_n_op=None):
     table_log.append(table_info)
 
     for operation in chain:
-        operation_name = operation["operation_name"]    
+        operation_name = operation["operation_name"]
         act_func = get_act_func(operation_name)
         table_info = act_func(table_info, operation, skip_op=skip_op)
         if 'row' in operation_name:
@@ -276,16 +277,16 @@ Here are examples of using the operations to tell whether the statement is True 
 
 possible_next_operation_dict = {
     "<init>": [
-        "add_column", 
-        "select_row", 
+        "add_column",
+        "select_row",
         "select_column",
         "group_column",
         "sort_column",
     ],
     "add_column": [
         "select_row",
-        "select_column", 
-        "group_column", 
+        "select_column",
+        "group_column",
         "sort_column",
         "<END>",
     ],
@@ -455,6 +456,7 @@ def generate_prompt_for_next_step(
     return next_operation, log
 
 
+# key sample func
 def dynamic_chain_exec_one_sample(
     sample,
     llm,
@@ -609,6 +611,9 @@ def _dynamic_chain_exec_with_cache_mp_core(arg):
 def dynamic_chain_exec_with_cache_mp(
     all_samples,
     llm,
+    # model_name,
+    # key,
+    # base_url,
     llm_options=None,
     strategy="voting",
     cache_dir="./results/debug",
@@ -619,6 +624,11 @@ def dynamic_chain_exec_with_cache_mp(
     result_samples = [None for _ in range(len(all_samples))]
     dynamic_chain_log_list = [None for _ in range(len(all_samples))]
 
+    # llm = ChatGPT(
+    #     model_name=model_name,
+    #     key=key,
+    #     base_url=base_url
+    # )
     args = [
         (idx, sample, llm, llm_options, strategy, cache_dir)
         for idx, sample in enumerate(all_samples)

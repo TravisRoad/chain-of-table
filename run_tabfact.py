@@ -30,6 +30,7 @@ def main(
     model_name: str = "gpt-3.5-turbo-16k-0613",
     result_dir: str = "results/tabfact",
     openai_api_key: str = None,
+    base_url: str = "https://api.openai.com/v1",
     first_n=-1,
     n_proc=1,
     chunk_size=1,
@@ -38,12 +39,16 @@ def main(
     gpt_llm = ChatGPT(
         model_name=model_name,
         key=os.environ["OPENAI_API_KEY"] if openai_api_key is None else openai_api_key,
+        base_url=base_url
     )
     os.makedirs(result_dir, exist_ok=True)
 
     proc_samples, dynamic_chain_log_list = dynamic_chain_exec_with_cache_mp(
         dataset,
         llm=gpt_llm,
+        # model_name=model_name,
+        # key=os.environ["OPENAI_API_KEY"] if openai_api_key is None else openai_api_key,
+        # base_url="https://burn.hair/v1",
         llm_options=gpt_llm.get_model_options(
             temperature=0.0, per_example_max_decode_steps=200, per_example_top_p=1.0
         ),
@@ -74,7 +79,7 @@ def main(
         final_result, open(os.path.join(result_dir, "final_result.pkl"), "wb")
     )
     pickle.dump(
-        dynamic_chain_log_list, 
+        dynamic_chain_log_list,
         open(os.path.join(result_dir, "dynamic_chain_log_list.pkl"), "wb")
     )
 

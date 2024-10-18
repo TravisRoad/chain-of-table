@@ -13,15 +13,25 @@
 # limitations under the License.
 
 
+from tkinter.filedialog import Open
 import openai
+# from openai import OpenAI
 import time
 import numpy as np
 
 
 class ChatGPT:
-    def __init__(self, model_name, key):
+    def __init__(self, model_name, key, base_url=""):
         self.model_name = model_name
         self.key = key
+        self.base_url = base_url
+        url = None
+        if base_url != "":
+            url = base_url
+        # self.client = OpenAI(
+        #    api_key=key,
+        #    base_url=url,
+        # )
 
     def get_model_options(
         self,
@@ -53,11 +63,21 @@ class ChatGPT:
         error = None
         while gpt_responses is None:
             try:
+                # gpt_responses:openai.types.Completion = self.client.chat.completions.create(
+                #     model=self.model_name,
+                #     messages=messages,
+                #     stop=end_str,
+                #     **options
+                # )
+
+                if 'deepseek' in self.model_name:
+                    options["n"] = 1
                 gpt_responses = openai.ChatCompletion.create(
                     model=self.model_name,
                     messages=messages,
                     stop=end_str,
                     api_key=self.key,
+                    api_base=self.base_url,
                     **options
                 )
                 error = None
@@ -93,5 +113,7 @@ class ChatGPT:
         if options is None:
             options = self.get_model_options()
         options["n"] = 1
+        if 'deepseek' in self.model_name:
+            options["n"] = 1
         result = self.generate_plus_with_score(prompt, options, end_str)[0][0]
         return result
