@@ -549,43 +549,46 @@ def dynamic_chain_exec_one_sample(
         current_sample = solver_func(
             current_sample, table_info, llm=llm, llm_options=op_llm_options, **kargs
         )
+        # print("---\n", next_operation)
+        # print(current_sample)
+        # print(log)
     return current_sample, dynamic_chain_log
 
 
-def dynamic_chain_exec_with_cache_for_loop(
-    all_samples,
-    llm,
-    llm_options=None,
-    strategy="voting",
-    cache_dir="./cache/debug",
-):
-    os.makedirs(cache_dir, exist_ok=True)
-    result_samples = [None for _ in range(len(all_samples))]
-    dynamic_chain_log_list = [None for _ in range(len(all_samples))]
+# def dynamic_chain_exec_with_cache_for_loop(
+#     all_samples,
+#     llm,
+#     llm_options=None,
+#     strategy="voting",
+#     cache_dir="./cache/debug",
+# ):
+#     os.makedirs(cache_dir, exist_ok=True)
+#     result_samples = [None for _ in range(len(all_samples))]
+#     dynamic_chain_log_list = [None for _ in range(len(all_samples))]
 
-    cache_filename = "case-{}.pkl"
+#     cache_filename = "case-{}.pkl"
 
-    def _func(idx):
-        sample = all_samples[idx]
-        sample_id = sample["id"]
-        cache_path = os.path.join(cache_dir, cache_filename.format(sample_id))
-        if os.path.exists(cache_path):
-            _, proc_sample, log = pickle.load(open(cache_path, "rb"))
-        else:
-            proc_sample, log = dynamic_chain_exec_one_sample(
-                sample, llm=llm, llm_options=llm_options, strategy=strategy
-            )
-            pickle.dump((sample, proc_sample, log), open(cache_path, "wb"))
-        result_samples[idx] = proc_sample
-        dynamic_chain_log_list[idx] = log
+#     def _func(idx):
+#         sample = all_samples[idx]
+#         sample_id = sample["id"]
+#         cache_path = os.path.join(cache_dir, cache_filename.format(sample_id))
+#         if os.path.exists(cache_path):
+#             _, proc_sample, log = pickle.load(open(cache_path, "rb"))
+#         else:
+#             proc_sample, log = dynamic_chain_exec_one_sample(
+#                 sample, llm=llm, llm_options=llm_options, strategy=strategy
+#             )
+#             pickle.dump((sample, proc_sample, log), open(cache_path, "wb"))
+#         result_samples[idx] = proc_sample
+#         dynamic_chain_log_list[idx] = log
 
-    for idx in tqdm(range(len(all_samples)), total=len(all_samples)):
-        try:
-            _func(idx)
-        except Exception as e:
-            print(f"IDX={idx}: {e}", flush=True)
+#     for idx in tqdm(range(len(all_samples)), total=len(all_samples)):
+#         try:
+#             _func(idx)
+#         except Exception as e:
+#             print(f"IDX={idx}: {e}", flush=True)
 
-    return result_samples, dynamic_chain_log_list
+#     return result_samples, dynamic_chain_log_list
 
 
 def _dynamic_chain_exec_with_cache_mp_core(arg):
@@ -599,7 +602,8 @@ def _dynamic_chain_exec_with_cache_mp_core(arg):
             _, proc_sample, log = pickle.load(open(cache_path, "rb"))
         else:
             proc_sample, log = dynamic_chain_exec_one_sample(
-                sample, llm=llm, llm_options=llm_options, strategy=strategy
+                sample, llm=llm, llm_options=llm_options, strategy=strategy,
+                #   debug=True
             )
             pickle.dump((sample, proc_sample, log), open(cache_path, "wb"))
         return idx, proc_sample, log
